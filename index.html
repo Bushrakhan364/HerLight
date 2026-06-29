@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HerLight — Her Light of Guidance</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --rose:#C7396B;--rose-l:#F2A7C3;--rose-p:#FADADD;--rose-bg:#FFF5F8;
+  --amber:#F7C59F;--amber-d:#D4813A;
+  --panel:#FFF0F5;--card:#FFFFFF;
+  --text:#2D1B25;--body:#5C3D4E;--muted:#9E7A8A;--border:#F0D0DC;
+  --ok:#5DB88A;--warn:#E8A838;--danger:#D94F5C;
+}
+*{font-family:'Plus Jakarta Sans',sans-serif}
+body{background:var(--rose-bg);color:var(--body);margin:0;display:flex;height:100vh;overflow:hidden;font-size:14px}
+h1,h2,h3,h4{font-family:'Fraunces',serif;color:var(--text)}
+button{cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif}
+input,select,textarea{font-family:'Plus Jakarta Sans',sans-serif}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--rose-p);border-radius:4px}
+#app{display:flex;width:100%;height:100vh;overflow:hidden}
+#left{width:268px;min-width:268px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%}
+#center{flex:1;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+#right{width:338px;min-width:338px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.brand-bar{padding:16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.brand{font-family:'Fraunces',serif;font-size:20px;color:var(--rose);font-weight:600;letter-spacing:-0.3px}
+.brand-sub{font-size:10px;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;margin-top:1px}
+.upload-zone{margin:12px;border:2px dashed var(--rose-l);border-radius:14px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,218,221,.15);flex-shrink:0}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--rose);background:rgba(199,57,107,.05)}
+.uz-icon{font-size:26px;margin-bottom:6px}
+.uz-text{font-size:11px;color:var(--muted);line-height:1.5}
+.uz-btn{background:var(--rose);color:#fff;border:none;padding:6px 16px;border-radius:8px;font-size:11px;font-weight:600;margin-top:8px;cursor:pointer}
+#file-input{display:none}
+.file-section{padding:0 12px;flex:1;overflow-y:auto;min-height:0}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:10px 0 6px;font-family:'Plus Jakarta Sans',sans-serif}
+.file-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px 10px;margin-bottom:7px;cursor:pointer;transition:all .15s;position:relative}
+.file-card:hover{border-color:var(--rose-l)}
+.file-card.active{border-color:var(--rose);background:rgba(199,57,107,.03)}
+.fname{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:175px}
+.fmeta{display:flex;align-items:center;gap:5px;margin-top:3px}
+.fbadge{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;background:var(--rose-p);color:var(--rose)}
+.fstatus{width:7px;height:7px;border-radius:50%;background:#ddd;margin-left:auto;flex-shrink:0}
+.fstatus.ok{background:var(--ok)}
+.fstatus.loading{background:var(--amber);animation:pulse 1s infinite}
+.fdel{position:absolute;top:7px;right:7px;background:none;border:none;color:var(--muted);font-size:13px;line-height:1;padding:1px 3px;opacity:.5}
+.fdel:hover{opacity:1;color:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.timeline-wrap{border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0;max-height:130px;overflow-y:auto}
+.tl-row{display:flex;gap:8px;margin-bottom:8px;font-size:11px;position:relative}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);margin-top:3px;flex-shrink:0}
+.tl-row:not(:last-child)::before{content:'';position:absolute;left:3px;top:12px;width:2px;bottom:-8px;background:rgba(247,197,159,.5)}
+.tl-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:185px}
+.tl-date{color:var(--muted)}
+.tab-bar{display:flex;padding:0 12px;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;background:#fff}
+.tab-bar::-webkit-scrollbar{height:3px}
+.tbtn{background:none;border:none;padding:11px 11px 9px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s}
+.tbtn:hover{color:var(--rose)}
+.tbtn.on{color:var(--rose);border-bottom-color:var(--amber);font-weight:700}
+.tab-body{flex:1;overflow-y:auto;padding:18px}
+.card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:15px;margin-bottom:13px;box-shadow:0 1px 8px rgba(199,57,107,.06)}
+.card-title{font-size:15px;margin-bottom:8px}
+.finding{border-left:4px solid #eee;border-radius:0 9px 9px 0;padding:11px 13px;margin-bottom:9px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.finding.ok{border-left-color:var(--ok)}
+.finding.warn{border-left-color:var(--warn)}
+.finding.bad{border-left-color:var(--danger)}
+.finding-title{font-weight:700;font-size:12px;color:var(--text);margin-bottom:3px}
+.finding-body{font-size:12px;color:var(--body);line-height:1.6}
+.badge{display:inline-block;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:.04em;margin-left:5px}
+.b-ok{background:#E8F7EF;color:#2E7D55}
+.b-warn{background:#FEF3E2;color:#9A620A}
+.b-bad{background:#FDEAEC;color:#A02030}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;margin-bottom:14px}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:11px;padding:11px;text-align:center}
+.stat-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:500;margin-bottom:1px}
+.stat-unit{font-size:9px;color:var(--muted)}
+.h-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px}
+.h-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:13px;text-align:center}
+.h-card.dim{opacity:.35}
+.h-name{font-family:'Fraunces',serif;font-size:12px;color:var(--text);margin-bottom:5px}
+.h-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:var(--rose)}
+.h-range{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin:2px 0}
+.h-note{font-size:10px;color:var(--body);margin-top:5px;line-height:1.4}
+.risk-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.risk-col h4{font-size:11px;font-weight:800;text-align:center;padding-bottom:6px;margin-bottom:8px;border-bottom:2px solid}
+.risk-col.low h4{color:var(--ok);border-color:var(--ok)}
+.risk-col.mid h4{color:var(--warn);border-color:var(--warn)}
+.risk-col.high h4{color:var(--danger);border-color:var(--danger)}
+.risk-item{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11px}
+.ri-name{font-weight:700;color:var(--text);margin-bottom:2px}
+.ri-note{color:var(--muted);font-size:10px}
+.pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--body);cursor:pointer;transition:all .12s}
+.pill.on{background:var(--rose);color:#fff;border-color:var(--rose)}
+.q-item{background:var(--rose-p);border-radius:7px;padding:7px 11px;font-size:11px;color:var(--rose);margin-bottom:5px;cursor:pointer;line-height:1.5;transition:all .12s}
+.q-item:hover{background:var(--rose);color:#fff}
+.disclaimer{background:rgba(242,167,195,.15);border-radius:8px;padding:9px 12px;font-size:10px;color:var(--muted);margin-top:14px;line-height:1.5;border-left:3px solid var(--rose-l)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:13px}
+.chart-card h4{font-family:'Fraunces',serif;font-size:12px;color:var(--text);margin-bottom:10px}
+.slide-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:26px;min-height:280px;position:relative;box-shadow:0 2px 12px rgba(199,57,107,.08)}
+.slide-num{font-size:10px;color:var(--muted);margin-bottom:4px}
+.slide-title{font-family:'Fraunces',serif;font-size:20px;color:var(--rose);margin-bottom:14px;border-bottom:2px solid var(--amber);padding-bottom:9px}
+.slide-body{font-size:12px;line-height:1.8;color:var(--body)}
+.slide-body li{margin-bottom:5px}
+.slide-foot{position:absolute;bottom:12px;right:14px;font-size:9px;color:var(--muted);font-style:italic}
+.pdf-wrap{overflow:auto;flex:1;background:#ede0e6;padding:14px;border-radius:11px;margin-top:10px}
+.empty{text-align:center;padding:55px 20px;color:var(--muted)}
+.empty .icon{font-size:44px;margin-bottom:10px}
+.empty h3{font-family:'Fraunces',serif;font-size:17px;color:var(--text);margin-bottom:7px}
+.empty p{font-size:12px;line-height:1.6}
+.api-bar{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.api-row{display:flex;align-items:center;gap:6px}
+.api-input{flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;background:#fff;color:var(--text);outline:none}
+.api-input:focus{border-color:var(--rose-l)}
+.api-btn{background:var(--rose);color:#fff;border:none;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap}
+.conn-dot{width:9px;height:9px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s}
+.conn-dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(247,197,159,.5)}
+.conn-dot.err{background:var(--danger)}
+.api-status{font-size:10px;color:var(--muted);margin-top:4px}
+.err-box{background:#FDEAEC;border:1px solid var(--danger);border-radius:7px;padding:8px 10px;font-size:10px;color:#A02030;margin-top:6px;line-height:1.6;display:none;white-space:pre-line}
+.err-box.show{display:block}
+.lang-bar{padding:6px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.lang-sel{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:7px;font-size:11px;background:#fff;color:var(--text)}
+.chat-msgs{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:9px}
+.msg{max-width:92%;border-radius:11px;padding:9px 11px;font-size:11px;line-height:1.6}
+.msg.user{align-self:flex-end;background:var(--rose);color:#fff;border-radius:11px 11px 2px 11px}
+.msg.ai{align-self:flex-start;background:#fff;border:1px solid var(--border);color:var(--body);border-radius:11px 11px 11px 2px}
+.msg-ref{font-size:9px;color:var(--muted);margin-top:4px;padding-top:4px;border-top:1px solid var(--border)}
+.typing{display:flex;gap:4px;align-items:center;padding:9px 12px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--rose-l);animation:bounce .9s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+.chat-bar{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:7px;align-items:flex-end;flex-shrink:0}
+.chat-input{flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:18px;font-size:11px;background:#fff;color:var(--text);outline:none;resize:none;max-height:80px}
+.chat-input:focus{border-color:var(--rose-l)}
+.send-btn{background:var(--rose);color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover{background:#a8295a}
+.mic-btn{background:none;border:1px solid var(--border);width:32px;height:32px;border-radius:50%;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mic-btn.active{background:var(--rose-p);border-color:var(--rose);color:var(--rose)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--rose-p);border-top-color:var(--rose);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#overlay{display:none;position:fixed;inset:0;background:rgba(255,245,248,.88);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+#overlay.show{display:flex}
+.spin-ring{width:44px;height:44px;border:4px solid var(--rose-p);border-top-color:var(--rose);border-radius:50%;animation:spin .8s linear infinite}
+.spin-txt{font-size:12px;color:var(--rose);font-weight:600}
+#mm-canvas{border-radius:12px;background:#fff;cursor:grab;display:block;width:100%;height:480px}
+#mm-canvas:active{cursor:grabbing}
+.mm-btns{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.mm-btn{padding:5px 12px;border-radius:7px;font-size:11px;background:#fff;border:1px solid var(--border);color:var(--body);font-weight:500;transition:all .12s}
+.mm-btn:hover{border-color:var(--rose);color:var(--rose)}
+</style>
+</head>
+<body>
+<div id="overlay"><div class="spin-ring"></div><div class="spin-txt" id="overlay-txt">Loading…</div></div>
+<div id="app">
+<div id="left">
+  <div class="brand-bar">
+    <div class="brand">✦ HerLight</div>
+    <div class="brand-sub">Her Light of Guidance</div>
+  </div>
+  <div class="upload-zone" id="upload-zone">
+    <div class="uz-icon">🌸</div>
+    <div class="uz-text">Drop health reports here<br><span style="font-size:9px">PDF · PNG · JPG</span></div>
+    <button class="uz-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Browse Files</button>
+  </div>
+  <input type="file" id="file-input" multiple accept=".pdf,.png,.jpg,.jpeg">
+  <div class="file-section" id="file-section">
+    <div class="section-label">Uploaded Reports</div>
+    <div id="files-container"><p style="font-size:11px;color:var(--muted)">No files yet</p></div>
+  </div>
+  <div class="timeline-wrap">
+    <div class="section-label">Timeline</div>
+    <div id="tl-items"><p style="font-size:11px;color:var(--muted)">Reports appear here</p></div>
+  </div>
+</div>
+<div id="center">
+  <div class="tab-bar">
+    <button class="tbtn on" data-tab="summary" onclick="goTab('summary',this)">📋 Summary</button>
+    <button class="tbtn" data-tab="hormones" onclick="goTab('hormones',this)">🧬 Hormones</button>
+    <button class="tbtn" data-tab="risk" onclick="goTab('risk',this)">⚠️ Risk</button>
+    <button class="tbtn" data-tab="diet" onclick="goTab('diet',this)">🥗 Diet</button>
+    <button class="tbtn" data-tab="lifestyle" onclick="goTab('lifestyle',this)">🌿 Lifestyle</button>
+    <button class="tbtn" data-tab="cycle" onclick="goTab('cycle',this)">🌙 Cycle</button>
+    <button class="tbtn" data-tab="mindmap" onclick="goTab('mindmap',this)">🗺️ Mindmap</button>
+    <button class="tbtn" data-tab="graphs" onclick="goTab('graphs',this)">📊 Graphs</button>
+    <button class="tbtn" data-tab="slides" onclick="goTab('slides',this)">🖥️ Slides</button>
+    <button class="tbtn" data-tab="pdfview" onclick="goTab('pdfview',this)">📄 PDF View</button>
+  </div>
+  <div class="tab-body" id="tab-body">
+    <div class="empty">
+      <div class="icon">✦</div>
+      <h3>Welcome to HerLight</h3>
+      <p>Upload your health reports on the left — blood tests, hormones,<br>PCOS, thyroid, IVF, pregnancy — and I will analyse everything<br>for you in simple, warm language. 🌸</p>
+    </div>
+  </div>
+</div>
+<div id="right">
+  <div class="api-bar">
+    <div class="api-row">
+      <input type="password" id="api-key" class="api-input" placeholder="Paste Gemini API key…">
+      <button class="api-btn" onclick="connectAPI()">Connect</button>
+      <div class="conn-dot" id="conn-dot"></div>
+    </div>
+    <div class="api-status" id="api-status">Not connected — get key at aistudio.google.com</div>
+    <div class="err-box" id="err-box"></div>
+  </div>
+  <div class="lang-bar">
+    <select class="lang-sel" id="lang-sel">
+      <option>English</option><option>Hindi</option><option>Urdu</option>
+      <option>Arabic</option><option>French</option><option>Spanish</option>
+      <option>Tamil</option><option>Malayalam</option>
+    </select>
+  </div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="msg ai">👋 Hi! I am HerLight, your personal health companion.<br><br>Paste your Gemini API key above, then upload your health reports and I will explain everything in simple language. You can also ask me anything — health questions, general questions, anything at all! 🌸</div>
+  </div>
+  <div class="chat-bar">
+    <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask about your health…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+    <button class="mic-btn" id="mic-btn" onclick="toggleVoice()" title="Voice input">🎤</button>
+    <button class="send-btn" onclick="sendChat()">➤</button>
+  </div>
+</div>
+</div>
+<script>
+let apiKey='', activeModel='', files=[], texts={}, currentTab='summary';
+let parsed={}, pdfDoc=null, pdfPage=1, pdfZoom=1.3;
+let slides=[], slideIdx=0, dietCuisine='Indian', dietType='Vegetarian';
+let mmScale=1, mmOffX=0, mmOffY=0, mmDrag=false, mmDragStart={x:0,y:0}, mmNodes=[];
+let isRecording=false, recognition=null;
+const MODELS=['gemini-2.0-flash','gemini-1.5-flash','gemini-1.5-pro','gemini-pro'];
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+function apiURL(model,key){return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;}
+async function connectAPI(){
+  const k=document.getElementById('api-key').value.trim();
+  if(!k){showErr('Please paste your API key first.');return;}
+  const dot=document.getElementById('conn-dot');
+  dot.className='conn-dot';setStatus('Testing…');showOverlay('Finding best model…');hideErr();
+  let found=null;
+  for(const m of MODELS){
+    try{
+      const res=await fetch(apiURL(m,k),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}],generationConfig:{maxOutputTokens:5}})});
+      const data=await res.json();
+      if(res.ok&&!data.error){found=m;break;}
+      if(data.error?.status==='RESOURCE_EXHAUSTED'){found=m;break;}
+      if(data.error?.message?.includes('API key')){showErr('Invalid API key. Get a fresh one at aistudio.google.com');dot.className='conn-dot err';setStatus('Invalid key');hideOverlay();return;}
+    }catch(e){}
+  }
+  hideOverlay();
+  if(found){
+    apiKey=k;activeModel=found;dot.className='conn-dot on';setStatus('Connected · '+found);hideErr();
+    addMsg('ai','✅ Connected using **'+found+'**! Upload a health report from the left and I will analyse it instantly. 💖');
+    if(Object.values(texts).join('').length>50){showOverlay('Analysing uploaded reports…');await runAnalysis();hideOverlay();goTabName('summary');}
+  }else{
+    dot.className='conn-dot err';setStatus('Failed');
+    showErr('Could not connect.\n\nIf you opened this file directly (file://), that is the problem.\n\nFix: push to GitHub → enable GitHub Pages → open the https:// URL in Chrome.\n\nOr run locally: python -m http.server 8080 → http://localhost:8080/index.html');
+    addMsg('ai','Connection failed. Push this file to GitHub Pages (free) and open the https:// link — that fixes it permanently.');
+  }
+}
+async function callGemini(prompt,sys){
+  if(!apiKey)return 'Please connect your Gemini API key first.';
+  const lang=document.getElementById('lang-sel').value;
+  const system=sys||`You are HerLight, a compassionate AI women's health companion. Always respond in ${lang}. Never say "you have [disease]" — say "your results may suggest". Keep language warm, simple, non-clinical. End every medical response with: "This is educational. Please consult your doctor."`;
+  try{
+    const res=await fetch(apiURL(activeModel,apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:system+'\n\n'+prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:2048}})});
+    const d=await res.json();
+    if(d.error)return 'Error: '+d.error.message;
+    return d.candidates?.[0]?.content?.parts?.[0]?.text||'No response.';
+  }catch(e){return 'Error: '+e.message;}
+}
+document.getElementById('upload-zone').addEventListener('click',()=>document.getElementById('file-input').click());
+document.getElementById('upload-zone').addEventListener('dragover',e=>{e.preventDefault();document.getElementById('upload-zone').classList.add('drag')});
+document.getElementById('upload-zone').addEventListener('dragleave',()=>document.getElementById('upload-zone').classList.remove('drag'));
+document.getElementById('upload-zone').addEventListener('drop',e=>{e.preventDefault();document.getElementById('upload-zone').classList.remove('drag');handleFiles(e.dataTransfer.files)});
+document.getElementById('file-input').addEventListener('change',e=>handleFiles(e.target.files));
+function handleFiles(list){
+  Array.from(list).forEach(f=>{
+    if(!f.name.match(/\.(pdf|png|jpg|jpeg)$/i)){alert('Only PDF, PNG, JPG supported.');return;}
+    const id='f'+Date.now()+Math.random().toString(36).slice(2,6);
+    files.push({id,file:f,name:f.name,type:f.name.match(/\.pdf$/i)?'PDF':'Image',status:'loading',date:new Date()});
+    renderFiles();renderTL();processFile(id);
+  });
+}
+async function processFile(id){
+  const f=files.find(x=>x.id===id);if(!f)return;
+  let txt='';
+  if(f.type==='PDF'){txt=await extractPDFText(f.file);}
+  else{txt=apiKey?await ocrImage(f.file):'[Image — connect API key for OCR]';}
+  texts[id]=txt;f.status='done';renderFiles();
+  if(apiKey&&txt.length>30){showOverlay('Analysing your report… 🌸');await runAnalysis();hideOverlay();goTabName('summary');}
+  else if(!apiKey){addMsg('ai','Report uploaded! Connect your Gemini API key and I will analyse it instantly. 💖');}
+}
+async function extractPDFText(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let out='';
+  for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i);const tc=await pg.getTextContent();out+=tc.items.map(x=>x.str).join(' ')+'\n';}
+  return out;
+}
+async function ocrImage(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=async e=>{
+      const b64=e.target.result.split(',')[1];
+      const resp=await fetch(apiURL(activeModel,apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inlineData:{mimeType:file.type,data:b64}},{text:'Extract ALL text from this medical report. Preserve all values, units, reference ranges. Return raw text only.'}]}]})});
+      const d=await resp.json();res(d.candidates?.[0]?.content?.parts?.[0]?.text||'Could not extract text.');
+    };r.readAsDataURL(file);
+  });
+}
+function renderFiles(){
+  const el=document.getElementById('files-container');
+  if(!files.length){el.innerHTML='<p style="font-size:11px;color:var(--muted)">No files yet</p>';return;}
+  el.innerHTML=files.map(f=>`<div class="file-card${f.status==='done'?' active':''}" onclick="onFileClick('${f.id}')"><button class="fdel" onclick="event.stopPropagation();delFile('${f.id}')">✕</button><div class="fname" title="${f.name}">${f.name}</div><div class="fmeta"><span class="fbadge">${f.type}</span><div class="fstatus ${f.status==='done'?'ok':'loading'}"></div></div></div>`).join('');
+}
+function renderTL(){
+  const el=document.getElementById('tl-items');
+  if(!files.length){el.innerHTML='<p style="font-size:11px;color:var(--muted)">Reports appear here</p>';return;}
+  el.innerHTML=files.map(f=>`<div class="tl-row"><div class="tl-dot"></div><div><div class="tl-name">${f.name.length>24?f.name.slice(0,24)+'…':f.name}</div><div class="tl-date">${f.date.toLocaleDateString()}</div></div></div>`).join('');
+}
+function delFile(id){files=files.filter(f=>f.id!==id);delete texts[id];renderFiles();renderTL();}
+function onFileClick(id){const f=files.find(x=>x.id===id);if(f&&f.type==='PDF'){loadPDF(f.file);goTabName('pdfview');}}
+async function runAnalysis(){
+  const allText=Object.values(texts).join('\n\n---\n\n');
+  if(!allText||allText.length<20)return;
+  const prompt=`Analyse this medical report and return ONLY a valid JSON object. No markdown. No text before or after. Exact structure:
+{"patient":{"name":"string","age":"string","date":"string","overview":"2 warm plain-English sentences about overall health"},"findings":[{"title":"short title","body":"plain English explanation no jargon","level":"ok or warn or bad"}],"hormones":[{"name":"lab name","value":"numeric string","unit":"unit","range":"e.g. 0.5-4.5","status":"NORMAL or ELEVATED or DEFICIENT or BORDERLINE","note":"one warm sentence"}],"risks":{"low":["name"],"med":["name"],"high":["name"]},"questions":["q1","q2","q3","q4","q5"],"conditions":["e.g. PCOS"],"keyStats":[{"label":"short label","value":"value","unit":"unit","color":"ok or warn or bad"}],"dietOverview":{"eat":["food1","food2","food3","food4","food5"],"avoid":["food1","food2","food3","food4","food5"],"note":"one personalised sentence"}}
+Only include hormones actually present. keyStats = 4-6 most important values.
+REPORT:\n${allText.slice(0,9000)}`;
+  const raw=await callGemini(prompt,'Return ONLY valid JSON. No markdown. No explanation. Just the JSON object.');
+  try{
+    const clean=raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    const start=clean.indexOf('{'),end=clean.lastIndexOf('}');
+    parsed=JSON.parse(clean.slice(start,end+1));
+    renderTab(currentTab);
+    addMsg('ai','✨ Done! '+(parsed.patient?.overview||'')+'\n\nAll tabs are ready — Summary, Hormones, Risk, Diet, Graphs and more. Ask me anything! 🌸');
+  }catch(e){
+    parsed={findings:[{title:'Report Read',body:raw.slice(0,600),level:'ok'}],hormones:[],risks:{low:[],med:[],high:[]},questions:[],conditions:[],patient:{overview:'Your report was read.'},keyStats:[],dietOverview:null};
+    renderTab(currentTab);addMsg('ai','I read your report! Ask me anything. 💖');
+  }
+}
+function goTab(tab,btn){currentTab=tab;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');renderTab(tab);}
+function goTabName(tab){const btn=document.querySelector(`[data-tab="${tab}"]`);goTab(tab,btn);}
+function renderTab(tab){
+  if(tab==='summary')renderSummary();
+  else if(tab==='hormones')renderHormones();
+  else if(tab==='risk')renderRisk();
+  else if(tab==='diet')renderDiet();
+  else if(tab==='lifestyle')renderLifestyle();
+  else if(tab==='cycle')renderCycle();
+  else if(tab==='mindmap')renderMindmap();
+  else if(tab==='graphs')renderGraphs();
+  else if(tab==='slides')renderSlides();
+  else if(tab==='pdfview')renderPDFView();
+}
+function renderSummary(){
+  const tb=document.getElementById('tab-body');
+  if(!parsed.findings?.length&&!Object.values(texts).join('').length){tb.innerHTML=`<div class="empty"><div class="icon">📋</div><h3>No reports yet</h3><p>Upload a health report to see your personalised summary.</p></div>`;return;}
+  if(!parsed.findings?.length){tb.innerHTML=`<div class="card"><h3 class="card-title">Report Uploaded ✓</h3><p style="font-size:12px;line-height:1.7">${apiKey?'<span class="spinner"></span> Analysing…':'Connect your Gemini API key to get your AI health summary.'}</p></div>`;return;}
+  const p=parsed.patient||{},stats=parsed.keyStats||[],diet=parsed.dietOverview;
+  tb.innerHTML=`
+    <div class="card" style="background:linear-gradient(120deg,#FFF0F5,#fff);border-left:4px solid var(--rose)">
+      <h2 style="font-family:'Fraunces',serif;font-size:17px;color:var(--rose);margin-bottom:8px">✦ Health Snapshot</h2>
+      ${p.name&&p.name!=='Unknown'?`<p style="font-size:11px;color:var(--muted);margin-bottom:6px">👤 <strong style="color:var(--text)">${p.name}</strong>${p.age?' · '+p.age:''}${p.date?' · '+p.date:''}</p>`:''}
+      <p style="font-size:13px;line-height:1.8">${p.overview||''}</p>
+    </div>
+    ${stats.length?`<div class="stat-grid">${stats.map(s=>`<div class="stat-card" style="border-top:3px solid ${s.color==='ok'?'var(--ok)':s.color==='warn'?'var(--warn)':'var(--danger)'}"><div class="stat-label">${s.label}</div><div class="stat-val" style="color:${s.color==='ok'?'var(--ok)':s.color==='warn'?'var(--warn)':'var(--danger)'}">${s.value}</div><div class="stat-unit">${s.unit}</div></div>`).join('')}</div>`:''}
+    <div style="font-family:'Fraunces',serif;font-size:13px;color:var(--text);margin-bottom:9px">🔍 Findings</div>
+    ${(parsed.findings||[]).map(f=>`<div class="finding ${f.level}"><div class="finding-title">${f.title}<span class="badge ${f.level==='ok'?'b-ok':f.level==='warn'?'b-warn':'b-bad'}">${f.level==='ok'?'NORMAL':f.level==='warn'?'BORDERLINE':'ATTENTION'}</span></div><div class="finding-body">${f.body}</div></div>`).join('')}
+    ${diet?`<div class="card" style="border-left:4px solid var(--amber);margin-top:14px"><h3 class="card-title" style="color:var(--amber-d)">🥗 Quick Diet Overview</h3><p style="font-size:11px;margin-bottom:10px">${diet.note||''}</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><div style="font-size:10px;font-weight:800;color:var(--ok);margin-bottom:5px">✅ EAT MORE</div>${(diet.eat||[]).map(x=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)">• ${x}</div>`).join('')}</div><div><div style="font-size:10px;font-weight:800;color:var(--danger);margin-bottom:5px">🚫 AVOID</div>${(diet.avoid||[]).map(x=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)">• ${x}</div>`).join('')}</div></div><p style="font-size:10px;color:var(--muted);margin-top:8px">→ Go to the Diet tab for your full 7-day meal plan</p></div>`:''}
+    ${parsed.questions?.length?`<div class="card" style="margin-top:14px"><h3 class="card-title">💬 Questions to Ask Your Doctor</h3><p style="font-size:10px;color:var(--muted);margin-bottom:7px">Click any question to ask me:</p>${parsed.questions.map(q=>`<div class="q-item" onclick="askQ(this.textContent)">${q}</div>`).join('')}</div>`:''}
+    <div class="disclaimer">⚕️ HerLight is for educational purposes only. Always consult your doctor.</div>`;
+}
+function renderHormones(){
+  const tb=document.getElementById('tab-body');const h=parsed.hormones||[];
+  if(!h.length){tb.innerHTML=`<div class="empty"><div class="icon">🧬</div><h3>No hormone data yet</h3><p>Upload a hormonal panel or blood report to see your values here.</p></div>`;return;}
+  const allNames=['Estrogen (E2)','Progesterone','LH','FSH','AMH','Testosterone','Prolactin','DHEA-S','TSH','Free T3','Free T4','Vitamin D','Ferritin','Iron','B12','HbA1c','Fasting Glucose','Insulin'];
+  const lh=h.find(x=>x.name.toLowerCase().includes('lh'));const fsh=h.find(x=>x.name.toLowerCase().includes('fsh'));
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:14px">🧬 Hormone Dashboard</h2>
+    ${lh&&fsh?`<div class="card" style="background:var(--rose-p);border:none;margin-bottom:14px"><strong style="color:var(--rose)">LH : FSH Ratio — </strong><span style="font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--rose)">${(parseFloat(lh.value)/parseFloat(fsh.value)).toFixed(2)}</span><span style="font-size:11px;color:var(--muted)"> (Normal &lt; 2.0 · Ratio &gt; 2 may suggest PCOS)</span></div>`:''}
+    <div class="h-grid">
+      ${h.map(x=>`<div class="h-card"><div class="h-name">${x.name}</div><div class="h-val">${x.value}</div><div class="h-range">${x.unit} · ${x.range}</div><span class="badge ${x.status==='NORMAL'?'b-ok':x.status==='ELEVATED'||x.status==='DEFICIENT'?'b-bad':'b-warn'}">${x.status}</span><div class="h-note">${x.note}</div></div>`).join('')}
+      ${allNames.filter(n=>!h.some(x=>x.name.toLowerCase().includes(n.split(' ')[0].toLowerCase()))).slice(0,5).map(n=>`<div class="h-card dim"><div class="h-name">${n}</div><div style="font-size:10px;color:var(--muted);margin-top:8px">Not in report</div></div>`).join('')}
+    </div>`;
+}
+function renderRisk(){
+  const tb=document.getElementById('tab-body');const r=parsed.risks||{};
+  if(!r.low?.length&&!r.med?.length&&!r.high?.length){tb.innerHTML=`<div class="empty"><div class="icon">⚠️</div><h3>No risk data yet</h3><p>Upload a health report to see your risk assessment.</p></div>`;return;}
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:14px">⚠️ Risk Analysis</h2>
+    <div class="risk-grid">
+      <div class="risk-col low"><h4>🟢 Low Risk</h4>${(r.low||[]).map(i=>`<div class="risk-item"><div class="ri-name">${i}</div><div class="ri-note">Within normal range</div></div>`).join('')||'<p style="font-size:10px;color:var(--muted)">None</p>'}</div>
+      <div class="risk-col mid"><h4>🟡 Medium Risk</h4>${(r.med||[]).map(i=>`<div class="risk-item"><div class="ri-name">${i}</div><div class="ri-note">Monitor & follow up</div></div>`).join('')||'<p style="font-size:10px;color:var(--muted)">None</p>'}</div>
+      <div class="risk-col high"><h4>🔴 High Risk</h4>${(r.high||[]).map(i=>`<div class="risk-item"><div class="ri-name">${i}</div><div class="ri-note">Discuss with your doctor</div></div>`).join('')||'<p style="font-size:10px;color:var(--muted)">None</p>'}</div>
+    </div>
+    <div class="disclaimer">⚕️ Risk levels are educational. Always consult your doctor.</div>`;
+}
+async function renderDiet(){
+  const tb=document.getElementById('tab-body');
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:12px">🥗 Personalised Diet Plan</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px"><span style="font-size:11px;color:var(--muted);align-self:center;font-weight:600">Cuisine:</span>${['Indian','Arabic','Mediterranean','Western'].map(c=>`<button class="pill${dietCuisine===c?' on':''}" onclick="dietCuisine='${c}';renderDiet()">${c}</button>`).join('')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px"><span style="font-size:11px;color:var(--muted);align-self:center;font-weight:600">Type:</span>${['Vegetarian','Non-Vegetarian','Vegan','Keto','Diabetic-friendly'].map(t=>`<button class="pill${dietType===t?' on':''}" onclick="dietType='${t}';renderDiet()">${t}</button>`).join('')}</div>
+    <div id="diet-body"><div style="text-align:center;padding:36px"><span class="spinner"></span>Generating your ${dietCuisine} ${dietType} meal plan…</div></div>`;
+  if(!apiKey){document.getElementById('diet-body').innerHTML='<p style="color:var(--muted);font-size:12px">Connect your Gemini API key to generate a personalised diet plan.</p>';return;}
+  const allText=Object.values(texts).join('\n').slice(0,3000)||'General women health';
+  const resp=await callGemini(`Based on these health findings:\n${allText}\n\nGenerate a 7-day ${dietCuisine} ${dietType} meal plan. Include realistic food names. Format as an HTML table with columns: Day, Breakfast, Lunch, Dinner, Snacks. Then list: Foods to AVOID, Foods to EAT MORE, and one hydration tip. No markdown code fences.`);
+  document.getElementById('diet-body').innerHTML=`<div style="font-size:12px;line-height:1.9">${resp}</div><div class="disclaimer">⚕️ Consult a dietitian for personalised nutrition advice.</div>`;
+}
+async function renderLifestyle(){
+  const tb=document.getElementById('tab-body');
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:14px">🌿 Lifestyle Coach</h2><div id="ls-body"><div style="text-align:center;padding:36px"><span class="spinner"></span>Personalising your plan…</div></div>`;
+  if(!apiKey){document.getElementById('ls-body').innerHTML='<p style="color:var(--muted);font-size:12px">Connect your API key for personalised lifestyle advice.</p>';return;}
+  const allText=Object.values(texts).join('\n').slice(0,2500)||'General women health';
+  const resp=await callGemini(`Based on:\n${allText}\n\nGive warm practical lifestyle advice with sections: 😴 Sleep, 🏃 Exercise (specific weekly plan), 🧘 Yoga & Mindfulness, 💧 Hydration, ⚖️ Weight (gentle), 💆 Stress Management, 😊 Emotional Support. Use emojis, be caring not clinical.`);
+  document.getElementById('ls-body').innerHTML=`<div style="font-size:12px;line-height:1.9;white-space:pre-wrap">${resp}</div><div class="disclaimer">⚕️ Consult your doctor before starting a new exercise program.</div>`;
+}
+async function renderCycle(){
+  const tb=document.getElementById('tab-body');
+  const conds=(parsed.conditions||[]).join(' ').toLowerCase();
+  const mode=conds.includes('preg')?'Pregnancy Mode':conds.includes('ivf')?'IVF Mode':'Cycle Insights';
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:14px">🌙 ${mode}</h2><div id="cy-body"><div style="text-align:center;padding:36px"><span class="spinner"></span>Generating insights…</div></div>`;
+  if(!apiKey){document.getElementById('cy-body').innerHTML='<p style="color:var(--muted);font-size:12px">Connect your API key for cycle insights.</p>';return;}
+  const allText=Object.values(texts).join('\n').slice(0,2500)||'possible PCOS';
+  const prompt=conds.includes('preg')?`Based on this pregnancy report:\n${allText}\n\nGive: safe foods, foods to avoid, trimester notes, hospital checklist, questions for OB/GYN. Be warm and reassuring.`:conds.includes('ivf')?`Based on this IVF report:\n${allText}\n\nExplain: egg retrieval, stimulation, embryo transfer, hormone levels, success factors, timeline. Be warm and clear.`:`Based on:\n${allText}\n\nExplain: irregular cycles, ovulation, fertile window, hormones, symptoms to track, when to seek help. Be warm, educational, supportive.`;
+  const resp=await callGemini(prompt);
+  document.getElementById('cy-body').innerHTML=`<div style="font-size:12px;line-height:1.9;white-space:pre-wrap">${resp}</div><div class="disclaimer">⚕️ Educational only. Consult your gynaecologist.</div>`;
+}
+function renderMindmap(){
+  const tb=document.getElementById('tab-body');
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:11px">🗺️ Interactive Health Mindmap</h2>
+    <div class="mm-btns">
+      <button class="mm-btn" onclick="mmScale=Math.min(mmScale+0.25,3);drawMM()">＋ Zoom In</button>
+      <button class="mm-btn" onclick="mmScale=Math.max(mmScale-0.25,0.3);drawMM()">－ Zoom Out</button>
+      <button class="mm-btn" onclick="mmScale=1;mmOffX=0;mmOffY=0;drawMM()">Reset</button>
+      <button class="mm-btn" onclick="buildMM();drawMM()">↺ Rebuild</button>
+      <span style="font-size:10px;color:var(--muted);align-self:center">Click node for details · Drag to pan</span>
+    </div>
+    <canvas id="mm-canvas"></canvas>`;
+  buildMM();drawMM();
+  const c=document.getElementById('mm-canvas');
+  c.addEventListener('mousedown',e=>{mmDrag=true;mmDragStart={x:e.clientX-mmOffX,y:e.clientY-mmOffY}});
+  c.addEventListener('mousemove',e=>{if(mmDrag){mmOffX=e.clientX-mmDragStart.x;mmOffY=e.clientY-mmDragStart.y;drawMM()}});
+  c.addEventListener('mouseup',()=>mmDrag=false);
+  c.addEventListener('mouseleave',()=>mmDrag=false);
+  c.addEventListener('wheel',e=>{e.preventDefault();mmScale=Math.max(0.3,Math.min(3,mmScale-(e.deltaY>0?.12:-.12)));drawMM()});
+  c.addEventListener('click',e=>{const rect=c.getBoundingClientRect();const mx=(e.clientX-rect.left-c.width/2-mmOffX)/mmScale;const my=(e.clientY-rect.top-c.height/2-mmOffY)/mmScale;mmNodes.forEach(n=>{if(Math.abs(mx-n.x)<70&&Math.abs(my-n.y)<22&&n.detail){askQ('Tell me about: '+n.label+'. Context: '+n.detail)}});});
+}
+function buildMM(){
+  const h=parsed.hormones||[],r=parsed.risks||{},f=parsed.findings||[];
+  mmNodes=[{x:0,y:0,label:'Your Health',color:'#C7396B',tc:'#fff',r:52,detail:(parsed.patient?.overview||'Your overall health profile')},{x:-210,y:-110,label:'Hormones',color:'#F2A7C3',tc:'#2D1B25',r:36,detail:'Your hormonal profile'},{x:210,y:-110,label:'Risks',color:'#FADADD',tc:'#2D1B25',r:36,detail:'Risk areas from your report'},{x:-210,y:110,label:'Diet',color:'#F7C59F',tc:'#2D1B25',r:36,detail:'Nutritional recommendations'},{x:210,y:110,label:'Lifestyle',color:'#F7C59F',tc:'#2D1B25',r:36,detail:'Exercise, sleep, stress tips'},{x:0,y:-175,label:'Lab Values',color:'#F2A7C3',tc:'#2D1B25',r:36,detail:'Key values from your blood test'}];
+  h.slice(0,4).forEach((hm,i)=>{const a=(-130+i*42)*Math.PI/180;mmNodes.push({x:-210+Math.cos(a)*120,y:-110+Math.sin(a)*70,label:hm.name,color:hm.status==='NORMAL'?'#E8F7EF':hm.status==='ELEVATED'||hm.status==='DEFICIENT'?'#FDEAEC':'#FEF3E2',tc:'#2D1B25',r:28,detail:`${hm.name}: ${hm.value} ${hm.unit}. ${hm.note}`});});
+  (r.high||[]).slice(0,2).forEach((item,i)=>{mmNodes.push({x:150+(i*130),y:-185,label:item.length>14?item.slice(0,14)+'…':item,color:'#FDEAEC',tc:'#A02030',r:26,detail:'High risk: '+item});});
+  f.slice(0,3).forEach((fi,i)=>{mmNodes.push({x:-260+(i*100),y:220,label:fi.title.length>14?fi.title.slice(0,14)+'…':fi.title,color:'#FFF0F5',tc:'#5C3D4E',r:26,detail:fi.body});});
+}
+function drawMM(){
+  const c=document.getElementById('mm-canvas');if(!c)return;
+  c.width=c.offsetWidth;c.height=480;
+  const ctx=c.getContext('2d');const cx=c.width/2+mmOffX,cy=c.height/2+mmOffY;
+  ctx.clearRect(0,0,c.width,c.height);ctx.save();ctx.translate(cx,cy);ctx.scale(mmScale,mmScale);
+  mmNodes.slice(1).forEach(n=>{ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(n.x,n.y);ctx.strokeStyle='rgba(242,167,195,0.45)';ctx.lineWidth=1.5/mmScale;ctx.stroke();});
+  mmNodes.forEach(n=>{ctx.beginPath();ctx.ellipse(n.x,n.y,n.r*1.7,n.r*0.72,0,0,Math.PI*2);ctx.fillStyle=n.color;ctx.fill();ctx.strokeStyle='rgba(199,57,107,0.25)';ctx.lineWidth=1/mmScale;ctx.stroke();ctx.fillStyle=n.tc;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`${Math.max(9,11/mmScale)}px 'Plus Jakarta Sans',sans-serif`;ctx.fillText(n.label.length>15?n.label.slice(0,15)+'…':n.label,n.x,n.y);if(n.r>30&&mmScale>0.55){ctx.fillStyle='rgba(92,61,78,0.45)';ctx.font=`${Math.max(7,8/mmScale)}px sans-serif`;ctx.fillText('click for detail',n.x,n.y+n.r*0.72+9/mmScale);}});
+  ctx.restore();
+}
+function renderGraphs(){
+  const tb=document.getElementById('tab-body');const h=parsed.hormones||[],r=parsed.risks||{};
+  if(!h.length&&!r.low?.length&&!r.med?.length&&!r.high?.length){tb.innerHTML=`<div class="empty"><div class="icon">📊</div><h3>No data to chart</h3><p>Upload a health report with lab values to see your charts.</p></div>`;return;}
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:14px">📊 Health Charts</h2><div class="chart-grid" id="chart-grid"></div>`;
+  const cg=document.getElementById('chart-grid');
+  if(h.length){cg.appendChild(mkCC('Hormone Values vs Normal Range','c1'));new Chart(document.getElementById('c1'),{type:'bar',data:{labels:h.map(x=>x.name.length>10?x.name.slice(0,10)+'…':x.name),datasets:[{label:'Your Value',data:h.map(x=>parseFloat(x.value)||0),backgroundColor:'rgba(199,57,107,0.75)',borderRadius:5},{label:'Range Max',data:h.map(x=>{const p=x.range?.split('-');return p&&p[1]?parseFloat(p[1])||0:0}),backgroundColor:'rgba(247,197,159,0.55)',borderRadius:5}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});}
+  if(r.low?.length||r.med?.length||r.high?.length){cg.appendChild(mkCC('Risk Distribution','c2'));new Chart(document.getElementById('c2'),{type:'doughnut',data:{labels:['Low','Medium','High'],datasets:[{data:[r.low?.length||0,r.med?.length||0,r.high?.length||0],backgroundColor:['rgba(93,184,138,0.8)','rgba(232,168,56,0.8)','rgba(217,79,92,0.8)'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});}
+  const vits=h.filter(x=>['vitamin','ferritin','iron','b12'].some(k=>x.name.toLowerCase().includes(k)));
+  if(vits.length){cg.appendChild(mkCC('Vitamins & Minerals','c3'));new Chart(document.getElementById('c3'),{type:'bar',data:{labels:vits.map(x=>x.name),datasets:[{label:'Value',data:vits.map(x=>parseFloat(x.value)||0),backgroundColor:vits.map(x=>x.status==='NORMAL'?'rgba(93,184,138,0.75)':'rgba(217,79,92,0.75)'),borderRadius:5}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});}
+  const lh=h.find(x=>x.name.toLowerCase().includes('lh')),fsh=h.find(x=>x.name.toLowerCase().includes('fsh'));
+  if(lh&&fsh){cg.appendChild(mkCC('LH vs FSH','c4'));new Chart(document.getElementById('c4'),{type:'radar',data:{labels:['LH','FSH','Ratio×5'],datasets:[{label:'Values',data:[parseFloat(lh.value)||0,parseFloat(fsh.value)||0,(parseFloat(lh.value)/parseFloat(fsh.value)*5)||0],backgroundColor:'rgba(199,57,107,0.12)',borderColor:'#C7396B',pointBackgroundColor:'#C7396B'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{ticks:{font:{size:8}}}}}});}
+}
+function mkCC(title,id){const d=document.createElement('div');d.className='chart-card';d.innerHTML=`<h4>${title}</h4><canvas id="${id}"></canvas>`;return d;}
+async function renderSlides(){
+  const tb=document.getElementById('tab-body');
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:12px">🖥️ Health Presentation</h2>
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="uz-btn" onclick="buildSlides()" style="font-size:11px">✨ Generate Presentation</button>
+      <button class="pill" onclick="prevSlide()">← Prev</button>
+      <span id="sl-counter" style="font-size:11px;color:var(--muted)">—</span>
+      <button class="pill" onclick="nextSlide()">Next →</button>
+      <button class="pill" onclick="window.print()">🖨️ Print</button>
+    </div>
+    <div id="slide-display"><div class="slide-card"><div class="slide-title">HerLight Health Report</div><div class="slide-body"><p>Click Generate Presentation to create your personalised 10-slide health presentation.</p></div></div></div>`;
+}
+async function buildSlides(){
+  if(!apiKey){alert('Connect your API key first.');return;}
+  showOverlay('Creating your presentation…');
+  const allText=Object.values(texts).join('\n').slice(0,3000)||'General women health';
+  const raw=await callGemini(`Create a 10-slide health presentation based on:\n${allText}\nReturn ONLY a JSON array of 10 objects: [{"title":"slide title","bullets":["point1","point2","point3"]},...]\nSlides: 1-Patient Summary, 2-Key Hormones, 3-Risk Analysis, 4-Diet, 5-Lifestyle, 6-Exercise & Yoga, 7-Doctor Recommendations, 8-Questions for Doctor, 9-Guidelines & References, 10-Disclaimer`,'Return ONLY valid JSON array. No markdown. No explanation.');
+  hideOverlay();
+  try{const clean=raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();const s=clean.indexOf('['),e=clean.lastIndexOf(']');slides=JSON.parse(clean.slice(s,e+1));}
+  catch(ex){slides=[{title:'Health Report',bullets:['Upload your report for a personalised presentation']}];}
+  slideIdx=0;showSlide();
+}
+function showSlide(){const s=slides[slideIdx]||{title:'',bullets:[]};document.getElementById('sl-counter').textContent=`Slide ${slideIdx+1} / ${slides.length}`;document.getElementById('slide-display').innerHTML=`<div class="slide-card"><div class="slide-num">Slide ${slideIdx+1} of ${slides.length}</div><div class="slide-title">${s.title}</div><div class="slide-body"><ul>${(s.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul></div><div class="slide-foot">✦ HerLight — Her Light of Guidance</div></div>`;}
+function prevSlide(){if(slideIdx>0){slideIdx--;showSlide();}}
+function nextSlide(){if(slideIdx<slides.length-1){slideIdx++;showSlide();}}
+function renderPDFView(){
+  const tb=document.getElementById('tab-body');
+  tb.innerHTML=`<h2 style="font-family:'Fraunces',serif;font-size:17px;margin-bottom:11px">📄 PDF Viewer</h2>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button class="pill" onclick="pdfPage=Math.max(1,pdfPage-1);renderPDFPage()">◀ Prev</button>
+      <span id="pdf-info" style="font-size:11px;color:var(--muted)">—</span>
+      <button class="pill" onclick="pdfPage++;renderPDFPage()">Next ▶</button>
+      <button class="pill" onclick="pdfZoom=Math.min(3,pdfZoom+0.2);renderPDFPage()">＋</button>
+      <button class="pill" onclick="pdfZoom=Math.max(0.5,pdfZoom-0.2);renderPDFPage()">－</button>
+      <button class="pill" onclick="pdfZoom=1.3;renderPDFPage()">Fit</button>
+    </div>
+    <div class="pdf-wrap" id="pdf-wrap"><p style="text-align:center;color:var(--muted);font-size:12px;padding:40px">Click a PDF file from the left panel to view it here.</p></div>`;
+  if(pdfDoc)renderPDFPage();
+}
+async function loadPDF(file){const buf=await file.arrayBuffer();pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;pdfPage=1;if(currentTab==='pdfview')renderPDFPage();}
+async function renderPDFPage(){
+  if(!pdfDoc)return;pdfPage=Math.min(pdfPage,pdfDoc.numPages);pdfPage=Math.max(1,pdfPage);
+  const info=document.getElementById('pdf-info');if(info)info.textContent=`Page ${pdfPage} / ${pdfDoc.numPages}`;
+  const pg=await pdfDoc.getPage(pdfPage);const vp=pg.getViewport({scale:pdfZoom});
+  const wrap=document.getElementById('pdf-wrap');if(!wrap)return;
+  wrap.innerHTML='<canvas id="pdf-c"></canvas>';const c=document.getElementById('pdf-c');
+  c.width=vp.width;c.height=vp.height;c.style.borderRadius='8px';c.style.boxShadow='0 3px 14px rgba(0,0,0,0.15)';
+  await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+}
+async function sendChat(){
+  const inp=document.getElementById('chat-input');const msg=inp.value.trim();if(!msg)return;
+  if(!apiKey){addMsg('ai','Please connect your Gemini API key using the field at the top right. 🔑');return;}
+  addMsg('user',msg);inp.value='';showTyping();
+  const allText=Object.values(texts).join('\n');const lang=document.getElementById('lang-sel').value;
+  const lower=msg.toLowerCase();const isGeneral=/(who is|what is the capital|king|president|weather|movie|sport|history|country|world)/.test(lower);
+  let prompt;
+  if(isGeneral){prompt=`Answer this general question in ${lang}: ${msg}`;}
+  else if(allText.length>80){prompt=`Patient report:\n${allText.slice(0,5000)}\n\nPatient question: ${msg}\n\nAnswer based on the report if relevant, otherwise use general medical knowledge. Be warm and personal.`;}
+  else{prompt=`A woman asks in ${lang}: ${msg}\n\nAnswer warmly and helpfully.`;}
+  const resp=await callGemini(prompt);hideTyping();
+  const ref=allText.length>80&&!isGeneral?`📄 Based on: ${files.map(f=>f.name).join(', ')}`:''
+  addMsg('ai',resp,ref);
+}
+function addMsg(role,text,ref=''){
+  const el=document.getElementById('chat-msgs');const d=document.createElement('div');d.className=`msg ${role}`;
+  d.innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  if(ref)d.innerHTML+=`<div class="msg-ref">${ref}</div>`;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function showTyping(){const el=document.getElementById('chat-msgs');const d=document.createElement('div');d.className='typing';d.id='typing';d.innerHTML='<span></span><span></span><span></span>';el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function hideTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+function askQ(q){document.getElementById('chat-input').value=q;sendChat();}
+function toggleVoice(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Voice input only works in Chrome.');return;}
+  if(isRecording){recognition?.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition.lang='en-US';recognition.interimResults=false;
+  recognition.onstart=()=>{isRecording=true;document.getElementById('mic-btn').classList.add('active')};
+  recognition.onend=()=>{isRecording=false;document.getElementById('mic-btn').classList.remove('active')};
+  recognition.onresult=e=>{document.getElementById('chat-input').value=e.results[0][0].transcript;sendChat()};
+  recognition.start();
+}
+function showOverlay(t){document.getElementById('overlay-txt').textContent=t||'Loading…';document.getElementById('overlay').classList.add('show')}
+function hideOverlay(){document.getElementById('overlay').classList.remove('show')}
+function setStatus(t){document.getElementById('api-status').textContent=t}
+function showErr(t){const el=document.getElementById('err-box');el.textContent=t;el.classList.add('show')}
+function hideErr(){document.getElementById('err-box').classList.remove('show')}
+</script>
+</body>
+</html>
